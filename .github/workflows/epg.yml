@@ -1,22 +1,39 @@
 name: EPG Update
 on:
   push:
+    branches:
+      - main
   schedule:
     - cron: '15 16,18,20,22,0,2,4,6,8,10,12,14 * * *'
+  workflow_dispatch: # 建议加上这个，方便你手动点击运行测试
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 必须开启写入权限
+    permissions:
+      contents: write
+      
     steps:
     - uses: actions/checkout@v3
+
     - name: Update EPG Files
       run: |
+        # 下载文件
         rm -f e.xml && wget https://raw.githubusercontent.com/suzukua/epg/refs/heads/hidden/t.xml -O e.xml
+        
+        # 配置 Git
         git config --local user.name "github-actions[bot]"
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # 检查是否有变化并提交
         git add e.xml
-        git commit -m "EPG Update."
-    - name: Push changes
-      run: git push origin main
+        # 只有在有变动时才提交，防止空提交报错
+        if ! git diff --cached --exit-code; then
+          git commit -m "EPG Update."
+          git push origin main
+        else
+          echo "No changes in EPG, skipping push."
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
