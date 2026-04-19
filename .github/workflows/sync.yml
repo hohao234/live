@@ -1,12 +1,15 @@
-name: Sync GitHub to Cloudflare KV
+name: Sync Images to Cloudflare KV
 
 on:
   push:
     branches:
-      - main  # 当你 push 代码时触发同步
+      - main
+    paths:
+      - 'Images/**'            # 只有 Images 文件夹变动时才触发 push 同步
+      - 'txt2m3u/sync_kv.py'
   schedule:
-    - cron: '0 0 * * *'  # 每天北京时间早上 8 点自动运行
-  workflow_dispatch:      # 允许手动点击运行
+    - cron: '0 0 * * *'        # 每天北京时间上午 8 点运行
+  workflow_dispatch:           # 允许手动触发
 
 jobs:
   build:
@@ -28,4 +31,6 @@ jobs:
           KV_ACCOUNT_ID: ${{ secrets.KV_ACCOUNT_ID }}
           KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
           KV_API_TOKEN: ${{ secrets.KV_API_TOKEN }}
-        run: python sync_kv.py
+        run: |
+          cd txt2m3u
+          python sync_kv.py
