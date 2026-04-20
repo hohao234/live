@@ -1,8 +1,7 @@
 name: Sync KV to GitHub Images
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'  # 每 6 小时运行一次，保持同步
+
   workflow_dispatch:      # 允许你手动点击按钮立刻同步
 
 jobs:
