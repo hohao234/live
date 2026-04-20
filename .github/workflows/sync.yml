@@ -1,24 +1,21 @@
-name: Sync Images to Cloudflare KV
+name: Sync KV to GitHub Images
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'Images/**'            # 只有 Images 文件夹变动时才触发 push 同步
-      - 'txt2m3u/sync_kv.py'
   schedule:
-    - cron: '0 0 * * *'        # 每天北京时间上午 8 点运行
-  workflow_dispatch:           # 允许手动触发
+    - cron: '0 */6 * * *'  # 每 6 小时运行一次，保持同步
+  workflow_dispatch:      # 允许你手动点击按钮立刻同步
 
 jobs:
-  build:
+  sync_job:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write     # 必须有写权限
+
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 Python 环境
+      - name: 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -26,11 +23,18 @@ jobs:
       - name: 安装依赖
         run: pip install requests
 
-      - name: 执行同步脚本
+      - name: 运行逆向同步脚本
         env:
           KV_ACCOUNT_ID: ${{ secrets.KV_ACCOUNT_ID }}
           KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
           KV_API_TOKEN: ${{ secrets.KV_API_TOKEN }}
         run: |
-          cd txt2m3u
-          python sync_kv.py
+          python txt2m3u/sync_kv.py
+
+      - name: 提交并推送变动
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add Images/
+          git commit -m "📊 同步 KV 变动到 GitHub [$(date '+%Y-%m-%d %H:%M')]" || exit 0
+          git push
