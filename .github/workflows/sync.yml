@@ -3,8 +3,13 @@ name: 极速增量同步
 on:
   schedule:
     - cron: '0 19 * * *' # 北京时间凌晨3点
-  workflow_dispatch:      # 随时手动点击
-
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: '是否强制重新下载所有台标？'
+        required: false
+        default: 'false'
+        type: boolean
 jobs:
   sync:
     runs-on: ubuntu-latest
