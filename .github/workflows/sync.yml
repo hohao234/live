@@ -1,35 +1,28 @@
-name: Daily Sync Images to KV
+name: 极速增量同步
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'Images/**'
   schedule:
-    # 每天北京时间 08:30 运行 (UTC 00:30)
-    - cron: '30 0 * * *'
-  workflow_dispatch: # 允许随时手动触发
+    - cron: '0 19 * * *' # 北京时间凌晨3点
+  workflow_dispatch:      # 随时手动点击
 
 jobs:
-  build:
+  sync:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 设置 Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
-      - name: 安装依赖
-        run: pip install requests
-
-      - name: 执行同步
+      - run: pip install requests
+      - name: 增量拉取
         env:
           KV_ACCOUNT_ID: ${{ secrets.KV_ACCOUNT_ID }}
           KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
           KV_API_TOKEN: ${{ secrets.KV_API_TOKEN }}
+        run: python scripts/sync_kv.py
+      - name: 提交变更
         run: |
-          python txt2m3u/sync_kv.py
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Images/
+          git diff --cached --quiet || (git commit -m "🤖 极速同步: 仅处理增删差异" && git push origin main)
