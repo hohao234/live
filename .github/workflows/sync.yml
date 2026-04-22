@@ -24,7 +24,7 @@ jobs:
           KV_ACCOUNT_ID: ${{ secrets.KV_ACCOUNT_ID }}
           KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
           KV_API_TOKEN: ${{ secrets.KV_API_TOKEN }}
-        run: python scripts/sync_kv.py
+        run: python txt2m3u/sync_kv.py
       - name: 提交变更
         run: |
           git config --local user.email "action@github.com"
